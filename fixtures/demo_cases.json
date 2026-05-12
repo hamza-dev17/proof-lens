@@ -1,0 +1,35 @@
+﻿[
+  {
+    "case_id": "fake-gibtu-exam-cancellation",
+    "title": "Sahte GIBTU Sinav Iptali",
+    "scenario_family": "university_announcement",
+    "selected_university": "GIBTU",
+    "plain_text_input": "GIBTU adina paylasilan bir mesaja gore 16 Mayis 2026 tarihli tum final sinavlari iptal edildi ve yeni takvim daha sonra duyurulacak.",
+    "screenshot_fixture_path": "fixtures/screenshots/fake-gibtu-exam-cancellation.png",
+    "screenshot_contract": "placeholder_ocr_fixture",
+    "synthetic_demo_only": true,
+    "synthetic_material_note": "This screenshot/text pair is synthetic demo material and not an Official University Source."
+  },
+  {
+    "case_id": "fake-gibtu-internship-payment-announcement",
+    "title": "Sahte GIBTU Staj Odeme Duyurusu",
+    "scenario_family": "university_announcement",
+    "selected_university": "GIBTU",
+    "plain_text_input": "GIBTU kariyer birimi adina paylasildigi soylenen duyuruda zorunlu staj listesine girmek icin 500 TL kayit odemesi isteniyor.",
+    "screenshot_fixture_path": "fixtures/screenshots/fake-gibtu-internship-payment-announcement.png",
+    "screenshot_contract": "placeholder_ocr_fixture",
+    "synthetic_demo_only": true,
+    "synthetic_material_note": "This screenshot/text pair is synthetic demo material and not an Official University Source."
+  },
+  {
+    "case_id": "internship-scam-registration-fee",
+    "title": "Kayit Ucreti Isteyen Staj Dolandiriciligi",
+    "scenario_family": "internship_job_scam",
+    "selected_university": null,
+    "plain_text_input": "Hemen basvuru yap, kontenjan sinirli. Sirket kimligi dogrulamasi icin 750 TL kayit ucreti yatir, ayni gun ise alinacaksin.",
+    "screenshot_fixture_path": "fixtures/screenshots/internship-scam-registration-fee.png",
+    "screenshot_contract": "placeholder_ocr_fixture",
+    "synthetic_demo_only": true,
+    "synthetic_material_note": "Synthetic employer/demo material only; this is not an Official University Source and must stay separate from university evidence."
+  }
+]
