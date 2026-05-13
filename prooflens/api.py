@@ -3,7 +3,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from prooflens.truth_report import build_stub_truth_report, truth_report_to_dict
+from prooflens.verification_workflow import VerificationWorkflow
 
 
 class PastedTextRequest(BaseModel):
@@ -14,6 +14,7 @@ class PastedTextRequest(BaseModel):
 
 
 app = FastAPI(title="ProofLens API", version="0.1.0")
+workflow = VerificationWorkflow()
 
 
 @app.post("/verify/pasted-text")
@@ -28,5 +29,8 @@ def verify_pasted_text(payload: PastedTextRequest) -> dict[str, object]:
     if payload.selected_university != "GIBTU":
         raise HTTPException(status_code=400, detail="selected_university must be GIBTU")
 
-    report = build_stub_truth_report(payload.text)
-    return truth_report_to_dict(report)
+    return workflow.run(
+        input_text=payload.text,
+        scenario_family=payload.scenario_family,
+        selected_university=payload.selected_university,
+    )
