@@ -9,6 +9,8 @@ First read the issue, labels, comments, CONTEXT.md, and any relevant ADRs/docs. 
 
 Keep the implementation scoped to the issue. Do not introduce live web search, crawling, fabricated official sources, or unrelated refactors unless the issue explicitly asks for them. Follow the repo domain language and existing architecture decisions.
 
+Keep commits truthful and narrowly scoped to the work actually included. If a change spans multiple unrelated slices, split it into separate commits with messages that describe the shipped behavior rather than a small subset of the diff.
+
 Before finishing, run the relevant verification commands. If all verifications pass, summarize the changes and tests. Then label the issue as done and close it with a short verification comment. If verification fails or the issue is incomplete, leave the issue open and explain exactly what remains.
 ```
 

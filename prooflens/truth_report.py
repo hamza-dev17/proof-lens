@@ -2,6 +2,11 @@
 
 from dataclasses import asdict, dataclass
 
+from prooflens.verdict_policy import (
+    EvidenceState,
+    VerdictPolicy,
+)
+
 
 @dataclass(frozen=True)
 class TruthReport:
@@ -23,20 +28,42 @@ def build_stub_truth_report(text: str) -> TruthReport:
     normalized_text = " ".join(text.split())
     claim = normalized_text or "Paylasilan universite duyurusu ifadesi"
 
+    verdict_policy = VerdictPolicy()
+    evidence_state = EvidenceState(
+        has_trusted_evidence=False,
+        has_manipulation_signals=True,
+    )
+    decision = verdict_policy.evaluate(evidence_state)
+
+    manipulation_signals = []
+    if evidence_state.has_manipulation_signals:
+        manipulation_signals.append("Acil ve kesin ifade dili")
+
+    explanation = "Bu iddia icin resmi kaynaklarda dogrudan dogrulama bulunamadi."
+    if evidence_state.has_manipulation_signals:
+        explanation += " Mesajdaki aciliyet dili ek dikkat gerektiriyor."
+
+    summary_message = (
+        "Iddia resmi kaynaklarla su anda dogrulanamadi. Resmi kaynak kontrolu yapmadan "
+        "paylasma veya odeme yapma."
+    )
+    if evidence_state.has_manipulation_signals:
+        summary_message += " Mesajdaki yonlendirici dil guveni dusuruyor."
+
     return TruthReport(
         input_type="pasted_text",
         scenario_family="university_announcement",
         selected_university="GIBTU",
         extracted_text=normalized_text,
         checkable_claims=[claim],
-        overall_verdict="Dogrulanamadi",
-        confidence_level="Dusuk guven",
+        overall_verdict=decision.verdict,
+        confidence_level=decision.confidence_label(),
         claim_cards=[
             {
                 "claim_text": claim,
-                "verdict": "Dogrulanamadi",
-                "confidence_level": "Dusuk guven",
-                "explanation_tr": "Bu iddia icin resmi kaynaklarda dogrudan dogrulama bulunamadi.",
+                "verdict": decision.verdict,
+                "confidence_level": decision.confidence_label(),
+                "explanation_tr": explanation,
             }
         ],
         source_citations=[
@@ -48,13 +75,13 @@ def build_stub_truth_report(text: str) -> TruthReport:
                 "retrieved_at": "2026-05-12",
             }
         ],
-        manipulation_signals=["Acil ve kesin ifade dili"],
+        manipulation_signals=manipulation_signals,
         recommended_actions=[
             "Odeme yapmadan once resmi GIBTU duyurularini kontrol et.",
             "Gerekirse Ogrenci Isleri ile dogrudan iletisime gec.",
         ],
         summary={
-            "tr_message": "Iddia resmi kaynaklarla su anda dogrulanamadi. Resmi kaynak kontrolu yapmadan paylasma veya odeme yapma.",
+            "tr_message": summary_message,
         },
     )
 
