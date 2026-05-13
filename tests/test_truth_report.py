@@ -15,8 +15,8 @@ class TruthReportTests(unittest.TestCase):
     def test_build_stub_truth_report_surfaces_manipulation_signals_in_text_fields(self):
         report = build_stub_truth_report("Bunu hemen paylasin yoksa gec kalirsiniz.")
 
-        self.assertIn("Acil ve kesin ifade dili", report.manipulation_signals)
-        self.assertIn("ek dikkat", report.claim_cards[0]["explanation_tr"].lower())
+        self.assertIn("Acil ve baski kuran ifade dili", report.manipulation_signals)
+        self.assertIn("supheli dil", report.claim_cards[0]["explanation_tr"].lower())
         self.assertIn("yonlendirici dil", report.summary["tr_message"].lower())
 
     def test_truth_report_to_dict_preserves_expected_payload_shape(self):

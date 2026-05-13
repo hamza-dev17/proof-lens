@@ -129,7 +129,9 @@ class VerificationWorkflowTests(unittest.TestCase):
         self.assertIn("supporting_evidence", first_claim)
         self.assertIn("contradicting_evidence", first_claim)
         self.assertIn("sources_checked", first_claim)
-        self.assertIn("manipulation_signals", first_claim)
+        self.assertNotIn("manipulation_signals", first_claim)
+        self.assertIn("manipulation_signals", report)
+        self.assertIn("recommended_actions", report)
 
     def test_skeptic_does_not_retry_when_evidence_is_strong(self):
         workflow = VerificationWorkflow(retriever=_StrongEvidenceRetriever())
@@ -139,6 +141,21 @@ class VerificationWorkflowTests(unittest.TestCase):
             selected_university="GIBTU",
         )
         self.assertEqual(report["claim_cards"][0]["skeptic_retry_count"], 0)
+
+    def test_workflow_detects_risk_signals_and_adds_payment_warning_action(self):
+        workflow = VerificationWorkflow(retriever=_StrongEvidenceRetriever())
+        report = workflow.run(
+            input_text="Hemen odeme yapin, yonetim adina iletildi.",
+            scenario_family="university_announcement",
+            selected_university="GIBTU",
+        )
+
+        self.assertIn("Acil ve baski kuran ifade dili", report["manipulation_signals"])
+        self.assertIn("Odeme veya para transferi talebi", report["manipulation_signals"])
+        self.assertIn("Kimligi belirsiz otoriteye atif", report["manipulation_signals"])
+        self.assertIn("Tarih bilgisi eksik", report["manipulation_signals"])
+        self.assertIn("Resmi kaynak baglantisi veya atfi yok", report["manipulation_signals"])
+        self.assertIn("odeme yapmadan once", report["recommended_actions"][0].lower())
 
 
 if __name__ == "__main__":

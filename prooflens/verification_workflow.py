@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Protocol
 
 from prooflens.corpus import load_corpus
+from prooflens.manipulation_signals import analyze_manipulation_risk
 from prooflens.retrieval import RetrievedEvidence, index_corpus
 from prooflens.verdict_policy import EvidenceState, VerdictPolicy
 
@@ -161,7 +162,7 @@ class VerificationWorkflow:
                 has_trusted_evidence=bool(skeptical.evidences),
                 is_directly_contradicted=contradiction_observed,
                 evidence_is_insufficient=skeptical.retry_count == 1 and not contradiction_observed,
-                has_manipulation_signals=True,
+                has_manipulation_signals=False,
             )
         )
         return VerdictOutput(
@@ -185,13 +186,15 @@ class VerificationWorkflow:
 
         overall_verdict = "Dogrulanamadi"
         overall_confidence = "Dusuk guven"
+        risk_analysis = analyze_manipulation_risk(text)
 
         for claim, skeptical, verdict in claim_results:
             all_claims.append(claim)
             explanation = "Bu iddia icin resmi kaynaklarda dogrudan dogrulama bulunamadi."
             if skeptical.retry_count == 1:
                 explanation += " Ilk arama zayif kaldigi icin bir kez yeniden arama yapildi."
-            explanation += " Mesajdaki aciliyet dili ek dikkat gerektiriyor."
+            if risk_analysis.signals:
+                explanation += " Supheli dil kaliplari ek dikkat gerektiriyor."
 
             sources_checked = [
                 {
@@ -226,7 +229,6 @@ class VerificationWorkflow:
                     "supporting_evidence": list(verdict.supporting_evidence),
                     "contradicting_evidence": list(verdict.contradicting_evidence),
                     "sources_checked": sources_checked,
-                    "manipulation_signals": ["acil dil", "resmi kaynak yok"],
                 }
             )
             claim_cards.append(
@@ -259,11 +261,8 @@ class VerificationWorkflow:
             "claims": claims_payload,
             "claim_cards": claim_cards,
             "source_citations": citations,
-            "manipulation_signals": ["Acil ve kesin ifade dili"],
-            "recommended_actions": [
-                "Odeme yapmadan once resmi GIBTU duyurularini kontrol et.",
-                "Gerekirse Ogrenci Isleri ile dogrudan iletisime gec.",
-            ],
+            "manipulation_signals": risk_analysis.signals,
+            "recommended_actions": risk_analysis.recommended_actions,
             "summary": {
                 "tr_message": (
                     "Iddia resmi kaynaklarla su anda dogrulanamadi. Resmi kaynak "

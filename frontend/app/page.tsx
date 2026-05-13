@@ -78,6 +78,20 @@ export default function Page() {
               </li>
             ))}
           </ul>
+
+          <h3>Manipulation Signals</h3>
+          <ul>
+            {report.manipulation_signals?.map((signal, index) => (
+              <li key={`${signal}-${index}`}>{signal}</li>
+            ))}
+          </ul>
+
+          <h3>Onerilen Aksiyonlar</h3>
+          <ul>
+            {report.recommended_actions?.map((action, index) => (
+              <li key={`${action}-${index}`}>{action}</li>
+            ))}
+          </ul>
         </section>
       ) : null}
     </main>

@@ -2,6 +2,7 @@
 
 from dataclasses import asdict, dataclass
 
+from prooflens.manipulation_signals import analyze_manipulation_risk
 from prooflens.verdict_policy import (
     EvidenceState,
     VerdictPolicy,
@@ -29,25 +30,19 @@ def build_stub_truth_report(text: str) -> TruthReport:
     claim = normalized_text or "Paylasilan universite duyurusu ifadesi"
 
     verdict_policy = VerdictPolicy()
-    evidence_state = EvidenceState(
-        has_trusted_evidence=False,
-        has_manipulation_signals=True,
-    )
+    risk_analysis = analyze_manipulation_risk(normalized_text)
+    evidence_state = EvidenceState(has_trusted_evidence=False, has_manipulation_signals=False)
     decision = verdict_policy.evaluate(evidence_state)
 
-    manipulation_signals = []
-    if evidence_state.has_manipulation_signals:
-        manipulation_signals.append("Acil ve kesin ifade dili")
-
     explanation = "Bu iddia icin resmi kaynaklarda dogrudan dogrulama bulunamadi."
-    if evidence_state.has_manipulation_signals:
-        explanation += " Mesajdaki aciliyet dili ek dikkat gerektiriyor."
+    if risk_analysis.signals:
+        explanation += " Supheli dil kaliplari ek dikkat gerektiriyor."
 
     summary_message = (
         "Iddia resmi kaynaklarla su anda dogrulanamadi. Resmi kaynak kontrolu yapmadan "
         "paylasma veya odeme yapma."
     )
-    if evidence_state.has_manipulation_signals:
+    if risk_analysis.signals:
         summary_message += " Mesajdaki yonlendirici dil guveni dusuruyor."
 
     return TruthReport(
@@ -75,11 +70,8 @@ def build_stub_truth_report(text: str) -> TruthReport:
                 "retrieved_at": "2026-05-12",
             }
         ],
-        manipulation_signals=manipulation_signals,
-        recommended_actions=[
-            "Odeme yapmadan once resmi GIBTU duyurularini kontrol et.",
-            "Gerekirse Ogrenci Isleri ile dogrudan iletisime gec.",
-        ],
+        manipulation_signals=risk_analysis.signals,
+        recommended_actions=risk_analysis.recommended_actions,
         summary={
             "tr_message": summary_message,
         },
