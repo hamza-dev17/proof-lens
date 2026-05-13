@@ -6,3 +6,4 @@ handson/
 !.env.example
 frontend/node_modules/
 .pytest_cache/
+pytest-cache-files-*/
