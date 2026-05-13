@@ -6,6 +6,7 @@ How the engineering skills should consume this repo's domain documentation when 
 
 - **`CONTEXT.md`** at the repo root.
 - **`docs/adr/`** for ADRs that touch the area you're about to work in.
+- **`docs/architecture.md`** when the issue needs broader system shape beyond the domain glossary.
 
 If these files don't exist yet, proceed silently. Don't block on them or ask for them upfront.
 
@@ -16,6 +17,7 @@ Single-context repo:
 ```
 /
 ├── CONTEXT.md
+├── docs/architecture.md
 ├── docs/adr/
 │   ├── 0001-event-sourced-orders.md
 │   └── 0002-postgres-for-write-model.md
