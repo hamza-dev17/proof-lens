@@ -1,9 +1,12 @@
 __pycache__/
 *.py[cod]
+*.log
 handson/
 .env
 .env.*
 !.env.example
 frontend/node_modules/
+frontend/.next/
 .pytest_cache/
+.pytest-temp/
 pytest-cache-files-*/

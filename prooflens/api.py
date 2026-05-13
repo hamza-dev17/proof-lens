@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import asdict
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from prooflens.image_extraction import (
@@ -28,6 +29,18 @@ class ScreenshotVerificationRequest(BaseModel):
 
 
 app = FastAPI(title="ProofLens API", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 workflow = VerificationWorkflow()
 screenshot_service = build_default_screenshot_service()
 

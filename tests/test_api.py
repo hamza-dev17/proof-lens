@@ -6,6 +6,21 @@ from prooflens.api import app
 
 
 class PastedTextVerificationApiTests(unittest.TestCase):
+    def test_allows_local_nextjs_browser_origin(self):
+        client = TestClient(app)
+
+        response = client.options(
+            "/verify/pasted-text",
+            headers={
+                "Origin": "http://127.0.0.1:3000",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "content-type",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.headers["access-control-allow-origin"], "http://127.0.0.1:3000")
+
     def test_returns_structured_turkish_truth_report_for_gibtu_university_claim(self):
         client = TestClient(app)
 
