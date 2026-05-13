@@ -51,6 +51,10 @@ export default function Page() {
   const [reviewState, setReviewState] = useState(null);
   const [isExtracting, setIsExtracting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
+  const [saveReport, setSaveReport] = useState(false);
+  const [savedReports, setSavedReports] = useState([]);
+  const [savedReportsError, setSavedReportsError] = useState("");
+  const [isLoadingSavedReports, setIsLoadingSavedReports] = useState(false);
 
   const controls = buildAnalyzerControlState(scenarioFamily, selectedUniversity);
   const apiBaseUrl = getApiBaseUrl();
@@ -137,6 +141,7 @@ export default function Page() {
           scenario_family: scenarioFamily,
           selected_university: effectiveUniversity,
           text,
+          save_report: saveReport,
         }),
       });
 
@@ -213,7 +218,7 @@ export default function Page() {
       const response = await fetch(`${apiBaseUrl}/verify/screenshot`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(buildScreenshotVerificationPayload(reviewState)),
+        body: JSON.stringify(buildScreenshotVerificationPayload(reviewState, saveReport)),
       });
       if (!response.ok) {
         throw new Error("Gözden geçirilen metinle doğrulama başarısız oldu.");
@@ -224,6 +229,37 @@ export default function Page() {
       setError(verifyError.message);
     } finally {
       setIsVerifying(false);
+    }
+  }
+
+  async function loadSavedReports() {
+    setSavedReportsError("");
+    setIsLoadingSavedReports(true);
+    try {
+      const response = await fetch(`${apiBaseUrl}/reports/saved`);
+      if (!response.ok) {
+        throw new Error("Kaydedilen raporlar getirilemedi.");
+      }
+      const payload = await response.json();
+      setSavedReports(payload.reports ?? []);
+    } catch (loadError) {
+      setSavedReportsError(loadError.message);
+    } finally {
+      setIsLoadingSavedReports(false);
+    }
+  }
+
+  async function openSavedReport(reportId) {
+    setSavedReportsError("");
+    try {
+      const response = await fetch(`${apiBaseUrl}/reports/saved/${reportId}`);
+      if (!response.ok) {
+        throw new Error("Kaydedilen rapor açılamadı.");
+      }
+      const payload = await response.json();
+      setReport(payload.report);
+    } catch (loadError) {
+      setSavedReportsError(loadError.message);
     }
   }
 
@@ -332,6 +368,15 @@ export default function Page() {
                 <button className="primaryButton" type="submit" disabled={isVerifying || text.trim().length === 0}>
                   {isVerifying ? "Kontrol ediliyor" : "Metni doğrula"}
                 </button>
+                <label className="checkboxRow" htmlFor="save-report-pasted">
+                  <input
+                    id="save-report-pasted"
+                    type="checkbox"
+                    checked={saveReport}
+                    onChange={(event) => setSaveReport(event.target.checked)}
+                  />
+                  <span>Doğrulamadan sonra raporu kaydet</span>
+                </label>
               </form>
             ) : (
               <form className="inputStack" onSubmit={onExtractScreenshot}>
@@ -379,7 +424,9 @@ export default function Page() {
                 screenshotPreviewUrl={screenshotPreviewUrl}
                 reviewState={reviewState}
                 isVerifying={isVerifying}
+                saveReport={saveReport}
                 onVerifyReviewedScreenshot={onVerifyReviewedScreenshot}
+                onSaveReportChange={setSaveReport}
                 onReviewTextChange={(nextText) => {
                   if (reviewState) {
                     setReviewState(updateReviewedText(reviewState, nextText));
@@ -389,6 +436,30 @@ export default function Page() {
             ) : null}
 
             {reportModel ? <TruthReportView model={reportModel} /> : <EmptyReportState inputMode={inputMode} />}
+
+            <section className="savedReportsPanel" aria-label="Kaydedilen raporlar">
+              <div className="savedReportsHeader">
+                <h3>Kaydedilen raporlar</h3>
+                <button className="secondaryButton" type="button" onClick={loadSavedReports} disabled={isLoadingSavedReports}>
+                  {isLoadingSavedReports ? "Yükleniyor" : "Listeyi yenile"}
+                </button>
+              </div>
+              {savedReportsError ? <p className="errorMessage">{savedReportsError}</p> : null}
+              {savedReports.length > 0 ? (
+                <div className="savedReportList">
+                  {savedReports.map((item) => (
+                    <button key={item.id} type="button" className="savedReportRow" onClick={() => openSavedReport(item.id)}>
+                      <strong>#{item.id}</strong>
+                      <span>{item.overall_verdict}</span>
+                      <span>{item.scenario_family}</span>
+                      <span>{item.created_at}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="reportSummary">Henüz kaydedilen rapor yok.</p>
+              )}
+            </section>
           </section>
         </div>
       </section>
@@ -582,8 +653,21 @@ export default function Page() {
           font-weight: 800;
         }
 
+        .secondaryButton {
+          min-height: 36px;
+          border: 1px solid rgba(148, 163, 184, 0.2);
+          border-radius: 10px;
+          cursor: pointer;
+          color: #e2e8f0;
+          background: rgba(30, 41, 59, 0.72);
+          padding: 0 10px;
+          font-size: 12px;
+          font-weight: 700;
+        }
+
         .primaryButton:disabled,
-        .segment:disabled {
+        .segment:disabled,
+        .secondaryButton:disabled {
           cursor: not-allowed;
           opacity: 0.62;
         }
@@ -674,6 +758,20 @@ export default function Page() {
           font-size: 13px;
         }
 
+        .checkboxRow {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          color: #cbd5e1;
+          font-size: 13px;
+          font-weight: 600;
+        }
+
+        .checkboxRow input {
+          width: 16px;
+          height: 16px;
+        }
+
         .timeline {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -719,7 +817,8 @@ export default function Page() {
 
         .reviewPanel,
         .reportShell,
-        .emptyReport {
+        .emptyReport,
+        .savedReportsPanel {
           border: 1px solid rgba(148, 163, 184, 0.16);
           border-radius: 14px;
           background: rgba(2, 6, 23, 0.24);
@@ -996,6 +1095,38 @@ export default function Page() {
             grid-template-columns: 1fr;
           }
         }
+
+        .savedReportsPanel {
+          display: grid;
+          gap: 10px;
+          padding: 14px;
+        }
+
+        .savedReportsHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 10px;
+        }
+
+        .savedReportList {
+          display: grid;
+          gap: 8px;
+        }
+
+        .savedReportRow {
+          display: grid;
+          grid-template-columns: auto auto minmax(0, 1fr) auto;
+          gap: 10px;
+          align-items: center;
+          border: 1px solid rgba(148, 163, 184, 0.18);
+          border-radius: 10px;
+          background: rgba(15, 23, 42, 0.62);
+          color: #e2e8f0;
+          padding: 10px;
+          text-align: left;
+          cursor: pointer;
+        }
       `}</style>
     </main>
   );
@@ -1006,7 +1137,9 @@ function ScreenshotReviewPanel({
   screenshotPreviewUrl,
   reviewState,
   isVerifying,
+  saveReport,
   onVerifyReviewedScreenshot,
+  onSaveReportChange,
   onReviewTextChange,
 }) {
   const previewTitle = selectedDemoCase?.title ?? "Yüklenen screenshot";
@@ -1043,6 +1176,15 @@ function ScreenshotReviewPanel({
         <button className="primaryButton" type="submit" disabled={!reviewState || isVerifying}>
           {isVerifying ? "Rapor hazırlanıyor" : "Gözden geçirilen metinle doğrula"}
         </button>
+        <label className="checkboxRow" htmlFor="save-report-screenshot">
+          <input
+            id="save-report-screenshot"
+            type="checkbox"
+            checked={saveReport}
+            onChange={(event) => onSaveReportChange(event.target.checked)}
+          />
+          <span>Doğrulamadan sonra raporu kaydet</span>
+        </label>
       </form>
     </section>
   );

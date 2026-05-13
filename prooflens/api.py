@@ -10,6 +10,7 @@ from prooflens.image_extraction import (
     ScreenshotExtractionUnsupported,
     build_default_screenshot_service,
 )
+from prooflens.saved_reports import SavedReportStore
 from prooflens.verification_workflow import VerificationWorkflow
 
 
@@ -18,6 +19,7 @@ class PastedTextRequest(BaseModel):
     scenario_family: str
     selected_university: str | None = None
     text: str
+    save_report: bool = False
 
 
 class ScreenshotVerificationRequest(BaseModel):
@@ -26,6 +28,7 @@ class ScreenshotVerificationRequest(BaseModel):
     selected_university: str | None = None
     reviewed_text: str
     ocr_text: str | None = None
+    save_report: bool = False
 
 
 app = FastAPI(title="ProofLens API", version="0.1.0")
@@ -43,6 +46,7 @@ app.add_middleware(
 )
 workflow = VerificationWorkflow()
 screenshot_service = build_default_screenshot_service()
+saved_report_store = SavedReportStore()
 
 
 def _validate_scenario(scenario_family: str, selected_university: str | None) -> None:
@@ -68,11 +72,14 @@ def verify_pasted_text(payload: PastedTextRequest) -> dict[str, object]:
         raise HTTPException(status_code=400, detail="input_type must be pasted_text")
     _validate_scenario(payload.scenario_family, payload.selected_university)
 
-    return workflow.run(
+    report = workflow.run(
         input_text=payload.text,
         scenario_family=payload.scenario_family,
         selected_university=payload.selected_university,
     )
+    if payload.save_report:
+        report["saved_report_id"] = saved_report_store.save_report(report)
+    return report
 
 
 @app.post("/verify/screenshot/extract")
@@ -137,4 +144,19 @@ def verify_reviewed_screenshot_text(payload: ScreenshotVerificationRequest) -> d
     )
     report["input_type"] = "image"
     report["extracted_text"] = reviewed_text
+    if payload.save_report:
+        report["saved_report_id"] = saved_report_store.save_report(report)
     return report
+
+
+@app.get("/reports/saved")
+def list_saved_reports(limit: int = 20) -> dict[str, object]:
+    return {"reports": saved_report_store.list_reports(limit=limit)}
+
+
+@app.get("/reports/saved/{report_id}")
+def get_saved_report(report_id: int) -> dict[str, object]:
+    record = saved_report_store.get_report(report_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="saved report not found")
+    return record

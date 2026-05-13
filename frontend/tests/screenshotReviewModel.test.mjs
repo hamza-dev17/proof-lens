@@ -38,4 +38,18 @@ test("buildScreenshotVerificationPayload uses reviewed text instead of hidden OC
   assert.equal(payload.ocr_text, "hidden OCR");
   assert.equal(payload.scenario_family, "university_announcement");
   assert.equal(payload.selected_university, "GIBTU");
+  assert.equal(payload.save_report, false);
+});
+
+test("buildScreenshotVerificationPayload can opt in to report saving", () => {
+  const state = createScreenshotReviewState({
+    previewUrl: null,
+    extractedText: "hidden OCR",
+    scenarioFamily: "internship_job_scam",
+    selectedUniversity: null,
+    extractionSource: "upload",
+    demoCaseId: null,
+  });
+  const payload = buildScreenshotVerificationPayload(state, true);
+  assert.equal(payload.save_report, true);
 });

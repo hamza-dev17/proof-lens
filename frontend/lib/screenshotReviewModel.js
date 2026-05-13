@@ -24,12 +24,13 @@ export function updateReviewedText(reviewState, reviewedText) {
   };
 }
 
-export function buildScreenshotVerificationPayload(reviewState) {
+export function buildScreenshotVerificationPayload(reviewState, saveReport = false) {
   return {
     input_type: "image",
     scenario_family: reviewState.scenarioFamily,
     selected_university: reviewState.selectedUniversity,
     reviewed_text: reviewState.reviewedText,
     ocr_text: reviewState.extractedText,
+    save_report: saveReport,
   };
 }

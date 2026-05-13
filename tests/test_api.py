@@ -1,4 +1,4 @@
-﻿import unittest
+import unittest
 
 from fastapi.testclient import TestClient
 
@@ -85,6 +85,28 @@ class PastedTextVerificationApiTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("scenario_family must be one of", response.json()["detail"])
 
+    def test_optionally_saves_pasted_text_report(self):
+        client = TestClient(app)
+        response = client.post(
+            "/verify/pasted-text",
+            json={
+                "input_type": "pasted_text",
+                "scenario_family": "university_announcement",
+                "selected_university": "GIBTU",
+                "text": "GIBTU'de tum final sinavlari iptal edildi.",
+                "save_report": True,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIsInstance(payload.get("saved_report_id"), int)
+
+        list_response = client.get("/reports/saved")
+        self.assertEqual(list_response.status_code, 200)
+        reports = list_response.json()["reports"]
+        self.assertTrue(any(item["id"] == payload["saved_report_id"] for item in reports))
+
 
 class ScreenshotVerificationApiTests(unittest.TestCase):
     def test_extracts_text_from_demo_case_screenshot_contract(self):
@@ -162,6 +184,35 @@ class ScreenshotVerificationApiTests(unittest.TestCase):
         self.assertEqual(payload["extracted_text"], "GIBTU final sinavlari iptal edildi deniyor.")
         flattened_claims = " ".join(payload["checkable_claims"])
         self.assertNotIn("IGNORE_THIS_HIDDEN_OCR_OUTPUT", flattened_claims)
+
+    def test_optionally_saves_screenshot_report_and_lists_history(self):
+        client = TestClient(app)
+        verify_response = client.post(
+            "/verify/screenshot",
+            json={
+                "input_type": "image",
+                "scenario_family": "university_announcement",
+                "selected_university": "GIBTU",
+                "reviewed_text": "GIBTU final sinavlari iptal edildi deniyor.",
+                "ocr_text": "HIDDEN_OCR",
+                "save_report": True,
+            },
+        )
+
+        self.assertEqual(verify_response.status_code, 200)
+        saved_report_id = verify_response.json().get("saved_report_id")
+        self.assertIsInstance(saved_report_id, int)
+
+        list_response = client.get("/reports/saved")
+        self.assertEqual(list_response.status_code, 200)
+        reports = list_response.json()["reports"]
+        self.assertTrue(any(item["id"] == saved_report_id for item in reports))
+
+        detail_response = client.get(f"/reports/saved/{saved_report_id}")
+        self.assertEqual(detail_response.status_code, 200)
+        saved_report = detail_response.json()["report"]
+        self.assertNotIn("ocr_text", saved_report)
+        self.assertNotIn("raw_screenshot_bytes", saved_report)
 
 
 if __name__ == "__main__":
