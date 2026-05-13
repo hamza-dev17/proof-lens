@@ -35,6 +35,41 @@ class PastedTextVerificationApiTests(unittest.TestCase):
         self.assertIn("recommended_actions", payload)
         self.assertIn("resmi kaynak", payload["summary"]["tr_message"].lower())
 
+    def test_accepts_internship_job_scam_without_selected_university(self):
+        client = TestClient(app)
+
+        response = client.post(
+            "/verify/pasted-text",
+            json={
+                "input_type": "pasted_text",
+                "scenario_family": "internship_job_scam",
+                "selected_university": None,
+                "text": "Limited slots, pay 750 TL registration fee now to start job today.",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertEqual(payload["scenario_family"], "internship_job_scam")
+        self.assertIsNone(payload["selected_university"])
+        self.assertIn("resmi kaynak", payload["summary"]["tr_message"].lower())
+
+    def test_rejects_unknown_scenario_family(self):
+        client = TestClient(app)
+
+        response = client.post(
+            "/verify/pasted-text",
+            json={
+                "input_type": "pasted_text",
+                "scenario_family": "sports_rumor",
+                "selected_university": None,
+                "text": "Some random claim",
+            },
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("scenario_family must be one of", response.json()["detail"])
+
 
 if __name__ == "__main__":
     unittest.main()

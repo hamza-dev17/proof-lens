@@ -6,6 +6,10 @@ export default function Page() {
   const [text, setText] = useState("");
   const [report, setReport] = useState(null);
   const [error, setError] = useState("");
+  const [scenarioFamily, setScenarioFamily] = useState("university_announcement");
+
+  const selectedUniversity =
+    scenarioFamily === "university_announcement" ? "GIBTU" : null;
 
   async function onSubmit(event) {
     event.preventDefault();
@@ -17,8 +21,8 @@ export default function Page() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           input_type: "pasted_text",
-          scenario_family: "university_announcement",
-          selected_university: "GIBTU",
+          scenario_family: scenarioFamily,
+          selected_university: selectedUniversity,
           text,
         }),
       });
@@ -37,9 +41,24 @@ export default function Page() {
   return (
     <main style={{ maxWidth: 900, margin: "0 auto", padding: 24, fontFamily: "ui-sans-serif, system-ui" }}>
       <h1>ProofLens Analyzer (MVP Iskelet)</h1>
-      <p>Senaryo: Universite duyurusu | Secili universite: GIBTU</p>
+      <p>
+        Senaryo: {scenarioFamily === "university_announcement" ? "Universite duyurusu" : "Staj/Is dolandiriciligi"}
+        {" | "}
+        Secili universite: {selectedUniversity ?? "Yok"}
+      </p>
 
       <form onSubmit={onSubmit}>
+        <label htmlFor="scenario-family">Senaryo ailesi</label>
+        <select
+          id="scenario-family"
+          value={scenarioFamily}
+          onChange={(event) => setScenarioFamily(event.target.value)}
+          style={{ display: "block", marginTop: 8, marginBottom: 12 }}
+        >
+          <option value="university_announcement">Universite duyurusu</option>
+          <option value="internship_job_scam">Staj/is dolandiriciligi</option>
+        </select>
+
         <label htmlFor="claim-text">Supheli metin</label>
         <textarea
           id="claim-text"
