@@ -2,6 +2,8 @@
 
 ProofLens is a misinformation verification product that turns suspicious screenshots or pasted claims into evidence-audited truth reports.
 
+For broader system shape and implementation boundaries, see `docs/architecture.md`.
+
 ## Language
 
 **Trusted Source Corpus**:
