@@ -1,18 +1,158 @@
 # ProofLens
 
-ProofLens is a Turkish-first misinformation verification MVP. It turns suspicious screenshots or pasted claims into evidence-backed truth reports using a curated trusted source corpus, conservative verdict rules, and a FastAPI + Next.js interface.
+ProofLens, şüpheli ekran görüntülerini veya metin tabanlı iddiaları analiz ederek güvenilir kaynaklarla karşılaştıran AI destekli bir doğrulama sistemidir.
 
-The MVP focuses on two scenarios: suspicious university announcements and internship/job scam posts. Verdicts are scoped to indexed trusted sources; ProofLens is not designed as a general open-web fact checker.
+---
 
-## Tech Stack
+# Sistem Mimarisi
 
-- Backend: Python, FastAPI, LangGraph-style verification workflow
-- Frontend: Next.js, React, TypeScript
-- Evidence: curated Markdown sources under `trusted_sources/`
-- Storage: SQLite for optional saved report history
-- Testing: pytest for backend, Node test runner for frontend helpers
+```mermaid
+flowchart TD
 
-## Quick Start
+A[Kullanıcı Görsel veya Metin Yükler]
+--> B[OCR / Vision İşlemi]
+
+B --> C[Claim Extraction]
+
+C --> D[Embedding Generation]
+
+D --> E[RAG Retrieval]
+
+E --> F[Trusted Source Araması]
+
+F --> G[Evidence Collection]
+
+G --> H[LLM Verification]
+
+H --> I[Truth Report]
+
+I --> J[Confidence Score]
+I --> K[Reasoning]
+I --> L[Evidence]
+```
+
+---
+
+# Kullanıcı Akışı
+
+```mermaid
+flowchart TD
+
+A[Görsel veya Metin Upload]
+--> B[OCR ile Metin Çıkarma]
+
+B --> C[Ana Claim Belirleme]
+
+C --> D[Semantic Retrieval]
+
+D --> E[Trusted Source Araması]
+
+E --> F[Kanıt Toplama]
+
+F --> G[AI Verification]
+
+G --> H[Doğruluk Raporu]
+```
+
+---
+
+# Örnek Verification Flow
+
+```mermaid
+flowchart TD
+
+A[Fake Duyuru Görseli]
+--> B[OCR Text Extraction]
+
+B --> C[Claim Extraction]
+
+C --> D[GIBTU finalleri iptal edildi]
+
+D --> E[RAG Retrieval]
+
+E --> F[Resmi Duyurular]
+
+F --> G[Verification]
+
+G --> H[Likely False]
+```
+
+---
+
+# Tech Stack
+
+## Frontend
+- Next.js
+- React
+- TypeScript
+
+## Backend
+- Python
+- FastAPI
+
+## AI / Retrieval
+- LangChain
+- LangGraph-style workflow
+- RAG pipeline
+- OCR / Vision processing
+- Embedding retrieval
+
+## Storage
+- SQLite
+- Markdown knowledge base
+
+## Testing
+- pytest
+- TDD workflow
+
+---
+
+# Geliştirme Workflow'um
+
+```mermaid
+flowchart TD
+
+A[prd.md]
+--> D[GitHub Issues]
+
+B[architecture.md]
+--> D
+
+C[ui.md]
+--> E[Prototype Workflow]
+
+E --> F[Frontend Tasarımı]
+
+F --> G[Final Design Commit]
+
+D --> H[Issue-by-Issue Development]
+
+H --> I[TDD Workflow]
+
+I --> J[Review Workflow]
+
+J --> K[Diagnosis Workflow]
+```
+
+---
+
+# Projenin Amacı
+
+ProofLens'in amacı:
+- sahte duyuruları,
+- scam iş / staj ilanlarını,
+- yanlış bilgileri,
+- manipüle edilmiş ekran görüntülerini
+
+daha hızlı doğrulayabilen bir sistem oluşturmaktır.
+
+Sistem, modelin kendi hafızasına güvenmek yerine evidence-based verification yaklaşımı kullanır.
+
+---
+
+# Quick Start
+
+## Backend
 
 ```powershell
 python -m venv .venv
@@ -21,37 +161,19 @@ pip install -r requirements.txt
 uvicorn prooflens.api:app --reload
 ```
 
+## Frontend
+
 ```powershell
 cd frontend
 npm install
 npm run dev
 ```
 
-Run tests:
+## Testler
 
 ```powershell
 pytest
+
 cd frontend
 npm test
 ```
-
-## Project Structure
-
-```text
-prooflens/           Python backend, API, workflow, retrieval, reports
-frontend/            Next.js app and frontend view-model helpers
-trusted_sources/     Curated evidence corpus used for verification
-fixtures/            Demo cases and stable sample data
-tests/               Backend test suite
-frontend/tests/      Frontend helper tests
-docs/                Architecture notes, ADRs, UI notes, PRD
-CONTEXT.md           Domain language and product rules
-```
-
-## Documentation
-
-- `CONTEXT.md`: domain vocabulary and product rules
-- `docs/architecture.md`: system design and implementation boundaries
-- `docs/adr/`: architecture decision records
-- `docs/prd/`: product requirements
-- `AGENTS.md`: agent workflow instructions
